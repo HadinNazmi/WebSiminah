@@ -74,7 +74,7 @@ class LokasiController extends Controller
     }
     public function store(Request $request)
     {
-        // try {
+        try {
             $this->validate($request, [
                 'nama_kelurahan' => 'required',
                 'nama_kecamatan' => 'required',
@@ -116,9 +116,10 @@ class LokasiController extends Controller
             ]);
             return redirect()->route('lokasi')->with('lokasi_alert', 'success');
 
-        // } catch (Exception $exception) {
-        //     return redirect()->back()->with('lokasi_alert', 'error');
-        // }
+        } catch (Exception $exception) {
+            \Log::error($exception);
+            return redirect()->back()->with('lokasi_alert', 'error');
+        }
     }
     public function edit($id)
     {
@@ -143,13 +144,13 @@ class LokasiController extends Controller
         try {
             $lokasi = Lokasi::findOrFail($id);
             if ($request->hasFile('gambar')) {
-                $image_path = public_path('storage/lokasi' . $lokasi->gambar);
+                $image_path = public_path('storage/lokasi/' . $lokasi->gambar);
                 if (file_exists($image_path)) {
                     Storage::delete('public/lokasi/' . $lokasi->gambar);
                 }
                 $gambar = $request->file('gambar');
                 $gambar->storeAs('public/lokasi', $gambar->hashName());
-                $lokasi->gambar = $request->gambar->hashName();
+                $lokasi->gambar = $gambar->hashName();
             }
             $lokasi->nama_kelurahan = $request->nama_kelurahan;
             $lokasi->latitude = $request->latitude;
@@ -158,6 +159,7 @@ class LokasiController extends Controller
             $lokasi->save();
             return redirect()->route('lokasi')->with('edit_alert', 'success');
         } catch (Exception $exception) {
+            \Log::error($exception);
             return redirect()->back()->with('edit_alert', 'error');
         }
     }

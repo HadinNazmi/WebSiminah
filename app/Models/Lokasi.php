@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 class Lokasi extends Model
 {
+    use HasUuids;
+
     protected $table = 'lokasi';
     protected $primaryKey = 'id_lokasi';
     public $incrementing = false;

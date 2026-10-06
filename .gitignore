@@ -1,6 +1,7 @@
 /.phpunit.cache
 /node_modules
 /public/build
+/public/storage
 /public/hot
 /storage/*.key
 /vendor
@@ -16,4 +17,4 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-/database/migrations
+/storage/app/public

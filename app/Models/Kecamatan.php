@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 class Kecamatan extends Model
 {
+    use HasUuids;
+
     protected $table = 'kecamatan';
     protected $primaryKey = 'id_kecamatan';
     public $incrementing = false;
