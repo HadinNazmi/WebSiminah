@@ -1,3 +1,5 @@
+name: siminah
+
 services:
   app:
     build: .
@@ -5,7 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/var/www/html
-    command: php artisan serve --host=0.0.0.0 --port=8000
+    command: sh -c "php artisan storage:link || true && php artisan serve --host=0.0.0.0 --port=8000"
     depends_on:
       - db
 
@@ -19,7 +21,6 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
 
-
   phpmyadmin:
     image: phpmyadmin:latest
     environment:
@@ -30,6 +31,6 @@ services:
       - "8080:80"
     depends_on:
       - db
-      
+
 volumes:
   dbdata:
