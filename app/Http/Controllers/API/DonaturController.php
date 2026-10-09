@@ -89,22 +89,33 @@ class DonaturController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+        public function store(Request $request)
     {
-        $data = $request->all();
-        $data['password'] = Hash::make($request->input('password'));
-        $donatur = Donatur::create($data);
-		$donatur1 = Donatur::where('no_hp', $donatur->no_hp)->first();
-		$sumbangan = 0;
-		$token = $donatur->createToken('authToken')->plainTextToken;
-		
-		$data = [
-				'donatur' => $donatur1,
-				'token' => $token,
-				'sumbangan' => $sumbangan
-			];
-		
-        return response()->json($data, Response::HTTP_CREATED);
+        $validated = $request->validate([
+            'nama_donatur'   => 'required|string|max:50',
+            'no_hp'          => 'required|string|max:50|unique:donatur,no_hp',
+            'alamat_donatur' => 'required|string|max:50',
+            'kelurahan'      => 'required|string|max:50',
+            'password'       => 'required|string|min:6|max:100',
+        ]);
+
+        $donatur = Donatur::create([
+            'nama_donatur'   => $validated['nama_donatur'],
+            'no_hp'          => $validated['no_hp'],
+            'alamat_donatur' => $validated['alamat_donatur'],
+            'kelurahan'      => $validated['kelurahan'],
+            'password'       => Hash::make($validated['password']),
+            'photo'          => 'dummy.jpg',
+            'poin'           => 0,
+        ]);
+
+        $token = $donatur->createToken('authToken')->plainTextToken;
+
+        return response()->json([
+            'donatur'   => $donatur->fresh(),
+            'token'     => $token,
+            'sumbangan' => 0,
+        ], Response::HTTP_CREATED);
     }
 
     /**
