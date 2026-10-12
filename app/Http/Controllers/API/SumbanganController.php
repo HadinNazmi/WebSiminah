@@ -55,40 +55,48 @@ class SumbanganController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-	{
-		$id_lokasi = $request->input('id_lokasi');
+        public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'id_lokasi'  => 'required|string',
+            'id_donatur' => 'required|string',
+            'berat'      => 'required|numeric|gt:0',
+            'image'      => 'required|string',
+        ]);
 
-		$id_kontainer = Kontainer::where('id_lokasi', $id_lokasi)->value('id_kontainer');
+        $lokasi = Lokasi::find($validated['id_lokasi']);
+        if (!$lokasi) {
+            return response()->json(['error' => 'Lokasi tidak ditemukan.'], Response::HTTP_NOT_FOUND);
+        }
 
-		$lokasi = Lokasi::find($id_lokasi);
+        $id_kontainer = Kontainer::where('id_lokasi', $validated['id_lokasi'])->value('id_kontainer');
+        if (!$id_kontainer) {
+            return response()->json(
+                ['error' => 'Lokasi ini belum memiliki kontainer, sumbangan belum bisa dikirim.'],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
 
-		if (!$lokasi) {
-			return response()->json(['error' => 'Lokasi not found.'], Response::HTTP_NOT_FOUND);
-		}
-		
-		$image = $this->saveImage($request->input('image'), 'sumbangan', $request->input('id_donatur'));
-		
-		$nama_kelurahan = $lokasi->nama_kelurahan;
-		$nama_kecamatan = $lokasi->kecamatan->nama_kecamatan;
-		(int)$poin = round($request->input('berat'));
+        $image = $this->saveImage($validated['image'], 'sumbangan', $validated['id_donatur']);
 
-		$data = [
-			'id_donatur' => $request->input('id_donatur'),
-			'id_kontainer' => $id_kontainer,
-			'berat' => $request->input('berat'),
-			'photo' => $image,
-			'keterangan' => '-',
-			'poin_reward' => $poin,
-		];
+        try {
+            Sumbangan::create([
+                'id_donatur'   => $validated['id_donatur'],
+                'id_kontainer' => $id_kontainer,
+                'tanggal'      => now()->toDateString(),
+                'berat'        => $validated['berat'],
+                'photo'        => $image,
+                'status'       => '0',
+                'keterangan'   => '-',
+                'poin_reward'  => (int) round($validated['berat']),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal menyimpan sumbangan: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to insert data.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
-		try {
-			$sumbangan = Sumbangan::create($data);
-			return $this->showLatest($request->input('id_donatur'), $data);
-		} catch (\Exception $e) {
-			return response()->json(['error' => 'Failed to insert data.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-		}
-	}
+        return $this->showLatest($validated['id_donatur']);
+    }
 
     /**
      * Display the specified resource.
