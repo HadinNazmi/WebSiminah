@@ -53,25 +53,44 @@ class RedeemController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+        public function store(Request $request)
     {
-		$donatur = Donatur::find($request->id_donatur);
-		$reward = Reward::find($request->id_reward);
+        $validated = $request->validate([
+            'id_donatur' => 'required|string',
+            'id_reward'  => 'required|string',
+        ]);
 
-		if (!$donatur || !$reward) {
-			return response()->json(['message' => 'Donatur tidak ada'], Response::HTTP_NOT_FOUND);
-		}
+        try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+                $donatur = Donatur::lockForUpdate()->find($validated['id_donatur']);
+                $reward = Reward::find($validated['id_reward']);
 
-		if ($donatur->poin >= $reward->jumlah_poin) {
-			$currentPoin = $donatur->poin - $reward->jumlah_poin;
-			$donatur->update(['poin' => $currentPoin]);
-			$donatur->save();
-			$redeem = Redeem::create($request->all());
+                if (!$donatur || !$reward) {
+                    return response()->json(['message' => 'Donatur atau reward tidak ditemukan'], Response::HTTP_NOT_FOUND);
+                }
 
-			return response()->json($redeem, Response::HTTP_CREATED);
-		} else {
-			return response()->json(['message' => 'Poin tidak cukup'], Response::HTTP_BAD_REQUEST);
-		}
+                $biaya = (int) $reward->jumlah_poin;
+                if ($donatur->poin < $biaya) {
+                    return response()->json(['message' => 'Poin tidak cukup'], Response::HTTP_BAD_REQUEST);
+                }
+
+                $donatur->poin = $donatur->poin - $biaya;
+                $donatur->save();
+
+                $redeem = Redeem::create([
+                    'id_redeem'      => (string) \Illuminate\Support\Str::uuid(),
+                    'id_donatur'     => $donatur->id_donatur,
+                    'id_reward'      => $reward->id_reward,
+                    'tanggal_redeem' => now()->toDateString(),
+                    'status'         => 'diproses',
+                ]);
+
+                return response()->json($redeem, Response::HTTP_CREATED);
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal menukar poin: ' . $e->getMessage());
+            return response()->json(['message' => 'Penukaran gagal, poin tidak dikurangi.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
