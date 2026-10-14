@@ -15,9 +15,10 @@ class Notifikasi extends Model
     protected $fillable = [
         'id_notifikasi',
         'id_donatur',
-        'jenis',
+        'id_sumbangan',
+        'status',
         'keterangan',
-        'is_read',   
+        'isRead',
     ];
     public function donatur()
     {

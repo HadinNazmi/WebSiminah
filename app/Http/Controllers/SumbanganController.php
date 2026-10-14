@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 
 class SumbanganController extends Controller
 {
@@ -197,18 +198,35 @@ class SumbanganController extends Controller
                 Donatur::where('id_donatur', $id)
                     ->increment('poin', $sumPoin);
             }
-            Notifikasi::create([
-                'id_donatur' => $id,
-                'jenis' => 'sumbangan_verifikasi',
-                'keterangan' => 'sumbangan berhasil diverifikasi',
-                'is_read' => 0,
-            ]);
-            Notifikasi::create([
-                'id_donatur' => $id,
-                'jenis' => 'reward_poin',
-                'keterangan' => 'Anda berhasil mendapat ' . $sumPoin . ' poin',
-                'is_read' => 0,
-            ]);
+            try {
+                $id_sumbangan = Sumbangan::where('created_at', $created_at)
+                    ->where('id_donatur', $id)
+                    ->value('id_sumbangan');
+
+                if ($id_sumbangan) {
+                    Notifikasi::create([
+                        'id_donatur' => $id,
+                        'id_sumbangan' => $id_sumbangan,
+                        'status' => 'sumbangan_verifikasi',
+                        'keterangan' => 'sumbangan berhasil diverifikasi',
+                        'isRead' => 0,
+                    ]);
+                    $poinText = substr('Anda berhasil mendapat ' . $sumPoin . ' poin', 0, 50);
+                    Notifikasi::create([
+                        'id_donatur' => $id,
+                        'id_sumbangan' => $id_sumbangan,
+                        'status' => 'reward_poin',
+                        'keterangan' => $poinText,
+                        'isRead' => 0,
+                    ]);
+                }
+            } catch (\Throwable $exception) {
+                Log::error('Gagal membuat notifikasi sumbangan: ' . $exception->getMessage(), [
+                    'exception' => $exception,
+                    'id_donatur' => $id,
+                    'id_sumbangan' => $id_sumbangan ?? null,
+                ]);
+            }
             return redirect()->route('sumbangan')->with('verifikasi_alert', 'success');
         }
         // } catch (Exception $exception) {
