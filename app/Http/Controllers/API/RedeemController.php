@@ -63,10 +63,14 @@ class RedeemController extends Controller
         try {
             return \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
                 $donatur = Donatur::lockForUpdate()->find($validated['id_donatur']);
-                $reward = Reward::find($validated['id_reward']);
+                $reward = Reward::lockForUpdate()->find($validated['id_reward']);
 
                 if (!$donatur || !$reward) {
                     return response()->json(['message' => 'Donatur atau reward tidak ditemukan'], Response::HTTP_NOT_FOUND);
+                }
+
+                if ((int) $reward->stok <= 0) {
+                    return response()->json(['message' => 'Stok reward habis'], Response::HTTP_BAD_REQUEST);
                 }
 
                 $biaya = (int) $reward->jumlah_poin;
@@ -76,6 +80,9 @@ class RedeemController extends Controller
 
                 $donatur->poin = $donatur->poin - $biaya;
                 $donatur->save();
+
+                $reward->stok = $reward->stok - 1;
+                $reward->save();
 
                 $redeem = Redeem::create([
                     'id_redeem'      => (string) \Illuminate\Support\Str::uuid(),
