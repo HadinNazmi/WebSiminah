@@ -10,6 +10,8 @@ use App\Models\Adminkelurahan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -60,25 +62,27 @@ class AdminController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'name' => 'required',
-            'no_hp' => 'required',
-            'id_lokasi' => 'required',
-            'alamat_rumah' => 'required',
-            'username' => 'required',
-            'email' => 'required',
+            'name' => 'required|string|max:255',
+            'no_hp' => 'required|string|max:50',
+            'id_lokasi' => 'required|exists:lokasi,id_lokasi',
+            'alamat_rumah' => 'required|string|max:50',
+            'username' => 'required|string|max:255|unique:users,username',
+            'email' => 'required|email|max:255|unique:users,email',
         ]);
 
         if ($validate->fails()) {
-            return redirect()->back()->with('tambah_alert', 'incomplete');
+            return redirect()->back()
+                ->with('tambah_alert', 'error')
+                ->withErrors($validate)
+                ->withInput();
         }
 
         try {
-            $existingUser = User::where('username', $request->username)->first();
-            if ($existingUser) {
-                return redirect()->back()->with('tambah_alert', 'error');
-            } else {
-                $nama_kelurahan = Lokasi::find($request->id_lokasi)->nama_kelurahan;
+            DB::transaction(function () use ($request) {
+                $lokasi = Lokasi::findOrFail($request->id_lokasi);
+                $nama_kelurahan = $lokasi->nama_kelurahan ?? 'siminah';
                 $form_nama_kelurahan = strtolower(str_replace(' ', '', $nama_kelurahan));
+
                 $user2 = User::create([
                     'name' => $request->name,
                     'username' => $request->username,
@@ -86,6 +90,7 @@ class AdminController extends Controller
                     'role' => 'admin_kelurahan',
                     'password' => Hash::make('admin' . $form_nama_kelurahan),
                 ]);
+
                 Adminkelurahan::create([
                     'id_user' => $user2->id,
                     'id_lokasi' => $request->id_lokasi,
@@ -93,10 +98,17 @@ class AdminController extends Controller
                     'alamat_rumah' => $request->alamat_rumah,
                     'no_hp' => $request->no_hp,
                 ]);
-                return redirect()->route('admin')->with('tambah_alert', 'success');
-            }
-        } catch (Exception $exception) {
-            return redirect()->back()->with('message', 'Tidak berhasil ditambahkan');
+            });
+
+            return redirect()->route('admin')->with('tambah_alert', 'success');
+        } catch (\Throwable $exception) {
+            Log::error('Gagal menambah admin kelurahan: ' . $exception->getMessage(), [
+                'exception' => $exception
+            ]);
+            return redirect()->back()
+                ->with('tambah_alert', 'error')
+                ->with('message', 'Tidak berhasil ditambahkan, periksa data lalu coba lagi.')
+                ->withInput();
         }
     }
     public function edit($id)
