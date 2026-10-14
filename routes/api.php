@@ -25,6 +25,7 @@ Route::get('dataLokasi', [LokasiController::class, 'dataLokasi'])->name('dataLok
 
 Route::middleware('auth:sanctum')->group(function(){
     Route::prefix('donaturs')->group(function () {
+        Route::get('/', [DonaturController::class, 'peringkat']);
         Route::get('/{id}', [DonaturController::class, 'show']);
         Route::put('/{id}', [DonaturController::class, 'update']);
     });

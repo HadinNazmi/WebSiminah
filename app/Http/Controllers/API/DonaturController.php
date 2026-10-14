@@ -86,6 +86,32 @@ class DonaturController extends Controller
         return response()->json($donaturs);
     }
 
+    public function peringkat()
+    {
+        $donaturs = Donatur::withSum(['sumbangan' => function ($query) {
+            $query->where('status', 'terverifikasi');
+        }], 'berat')
+        ->orderByDesc('sumbangan_sum_berat')
+        ->limit(50)
+        ->get()
+        ->map(function ($d) {
+            return [
+                'donatur' => [
+                    'id_donatur'     => $d->id_donatur,
+                    'nama_donatur'   => $d->nama_donatur,
+                    'no_hp'          => '',
+                    'alamat_donatur' => '',
+                    'kelurahan'      => '',
+                    'poin'           => 0,
+                    'photo'          => $d->photo ?: 'dummy.jpg',
+                ],
+                'sumbangan' => (float) ($d->sumbangan_sum_berat ?? 0),
+            ];
+        });
+
+        return response()->json($donaturs, Response::HTTP_OK);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
