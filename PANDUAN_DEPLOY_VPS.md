@@ -210,3 +210,106 @@ Untuk membuat backup data MySQL di VPS secara berkala:
 docker compose exec db sh -c "mysqldump -u root -p\${MYSQL_ROOT_PASSWORD} siminah" > ~/backup_siminah_$(date +%Y%m%d).sql
 ```
 File backup akan tersimpan aman di home directory server Anda.
+
+---
+
+## 8. Cara Masuk ke Terminal VPS (SSH)
+
+Setiap kali Anda ingin mengelola server VPS, buka **PowerShell** di komputer Windows Anda dan jalankan:
+
+```powershell
+ssh root@202.10.41.115
+```
+*(Masukkan password VPS Anda jika diminta. Ganti IP jika IP VPS berubah.)*
+
+Tanda bahwa sudah berhasil masuk, tampilan terminal akan berubah menjadi:
+```text
+root@vps:~#
+```
+
+Setelah masuk, pindah ke folder project:
+```bash
+cd ~/WebSiminah
+```
+
+### Perintah Harian yang Sering Dipakai di VPS
+
+| Kebutuhan | Perintah |
+|---|---|
+| **Cek status container** | `docker compose ps` |
+| **Lihat error log real-time** | `docker compose logs -f app` |
+| **Lihat error PHP detail** | `docker compose exec app tail -n 50 storage/logs/laravel.log` |
+| **Restart semua container** | `docker compose restart` |
+| **Update kode dari GitHub** | `git pull origin master` |
+| **Rebuild container setelah update** | `docker compose up -d --build app` |
+| **Clear cache Laravel** | `docker compose exec app php artisan optimize:clear` |
+| **Masuk CLI MySQL** | `docker compose exec db mysql -u root -p siminah` |
+| **Keluar dari terminal VPS** | `exit` |
+
+---
+
+## 9. Cara Mengelola Database MySQL di VPS
+
+### Opsi A: Lewat Terminal (CLI)
+```bash
+# Masuk ke MySQL
+docker compose exec db mysql -u root -p siminah
+
+# Di dalam mysql> prompt:
+SHOW TABLES;
+SELECT id, name, email, role FROM users;
+SELECT count(*) FROM donatur;
+EXIT;
+```
+
+### Opsi B: Pasang phpMyAdmin (GUI Browser)
+Jika ingin membuka database via browser seperti di lokal (port 8080), tambahkan service ini ke `docker-compose.yml`:
+
+```yaml
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: jelantah-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - jelantah-network
+```
+
+Lalu jalankan `docker compose up -d phpmyadmin` di VPS, dan buka `http://202.10.41.115:8080` di browser.
+
+> [!WARNING]
+> Pastikan firewall juga dibuka untuk port 8080 jika ingin menggunakan phpMyAdmin:
+> `sudo ufw allow 8080/tcp`
+
+---
+
+## 10. Log Progress & Riwayat Commit Deployment
+
+Semua perbaikan bug dan konfigurasi deployment telah dicatat secara kronologis di bawah ini.
+
+| Tanggal | Commit | Keterangan |
+|---|---|---|
+| 16 Okt 2026 | `cbe9d1f` | **feat:** Setup Docker production (PHP 8.2-FPM + Nginx + MySQL 8), file `.dockerignore`, `.env.production.example`, `PANDUAN_DEPLOY_VPS.md`, dan Nginx config |
+| 16 Okt 2026 | `0051337` | **fix:** Kompatibilitas MySQL 8.0 — query `MAX(COALESCE(updated_at, '-'))` diganti menjadi `MAX(updated_at)`. Perbaikan nama route duplikat `login` → `api.login` di `routes/api.php`. Pengaman `null` di fungsi `dateFormat()` dan `datetimeFormat()` di `helpers.php` |
+| 16 Okt 2026 | `e5101f1` | **fix:** Menambahkan `@props` default di `progressBar.blade.php` agar variabel `$type` tidak *undefined* di PHP 8.2 |
+| 16 Okt 2026 | `acd847b` | **fix:** Membuat file `inputDate.blade.php` dan mengubah pemanggilan komponen dari `<x-forms.inputDate>` ke `<x-forms.input-date>` agar kompatibel dengan filesystem Linux yang *case-sensitive* |
+
+### Status Halaman Saat Ini
+
+| Halaman | Admin Kelurahan | Admin CSR |
+|---|---|---|
+| Login | ✅ | ✅ |
+| Dashboard | ✅ | ✅ |
+| Kontainer | ✅ | ✅ (diperbaiki commit `e5101f1`) |
+| Sumbangan | ✅ | ✅ (diperbaiki commit `acd847b`) |
+| Donatur | ✅ | ✅ |
+| Hadiah / Redeem | ✅ | ✅ |
+| Profil | ✅ | ✅ |
+
