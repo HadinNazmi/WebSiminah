@@ -19,7 +19,7 @@ use App\Http\Controllers\API\LokasiController;
 |
 */
 
-Route::post('login', [DonaturController::class, 'login2'])->name('login');
+Route::post('login', [DonaturController::class, 'login2'])->name('api.login');
 Route::post('register', [DonaturController::class, 'store']);
 Route::get('dataLokasi', [LokasiController::class, 'dataLokasi'])->name('dataLokasi');
 

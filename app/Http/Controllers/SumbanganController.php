@@ -110,7 +110,7 @@ class SumbanganController extends Controller
                     ->select('kontainer.id_kontainer', 'lokasi.nama_kelurahan', 'lokasi.is_kecamatan', 'kecamatan.nama_kecamatan') // Select the kecamatan's name
                     ->selectRaw('SUM(COALESCE(sumbangan.berat, 0)) as total_berat')
                     ->selectRaw('COALESCE(COUNT(DISTINCT sumbangan.id_donatur), 0) as total_donatur')
-                    ->selectRaw('MAX(COALESCE(sumbangan.updated_at, "-")) as tanggal_laporan')
+                    ->selectRaw('MAX(sumbangan.updated_at) as tanggal_laporan')
                     ->selectRaw('YEAR(COALESCE(sumbangan.created_at, NOW())) as tahun, MONTH(COALESCE(sumbangan.created_at, NOW())) as bulan')
                     ->groupBy('kontainer.id_kontainer', 'lokasi.nama_kelurahan', 'lokasi.is_kecamatan', 'kecamatan.nama_kecamatan', 'tahun', 'bulan')
                     ->orderByDesc('total_berat')
@@ -148,7 +148,7 @@ class SumbanganController extends Controller
                 ->select('kontainer.id_kontainer', 'lokasi.nama_kelurahan', 'lokasi.is_kecamatan', 'kecamatan.nama_kecamatan')
                 ->selectRaw('SUM(COALESCE(sumbangan.berat, 0)) as total_berat')
                 ->selectRaw('COALESCE(COUNT(DISTINCT sumbangan.id_donatur), 0) as total_donatur')
-                ->selectRaw('MAX(COALESCE(sumbangan.updated_at, "-")) as tanggal_laporan')
+                ->selectRaw('MAX(sumbangan.updated_at) as tanggal_laporan')
                 ->selectRaw('YEAR(COALESCE(sumbangan.created_at, NOW())) as tahun, MONTH(COALESCE(sumbangan.created_at, NOW())) as bulan')
                 ->whereBetween('sumbangan.created_at', ["$yearA-$monthA-01", "$yearB-$monthB-31"])
                 ->groupBy('kontainer.id_kontainer', 'lokasi.nama_kelurahan', 'lokasi.is_kecamatan', 'kecamatan.nama_kecamatan', 'tahun', 'bulan')

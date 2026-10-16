@@ -20,7 +20,7 @@ function isAdminCsr()
 
 function datetimeFormat($timestamp)
 {
-    if ($timestamp !== '-' && $timestamp !== "belum pernah diisi") {
+    if (!empty($timestamp) && $timestamp !== '-' && $timestamp !== "belum pernah diisi") {
         $data = date('h:i', strtotime($timestamp)) . ', ' . date('d M Y', strtotime($timestamp));
     } else {
         $data = '-';
@@ -30,7 +30,7 @@ function datetimeFormat($timestamp)
 
 function dateFormat($timestamp)
 {
-    if ($timestamp !== '-') {
+    if (!empty($timestamp) && $timestamp !== '-') {
         $data = date('d F Y', strtotime($timestamp));
     } else {
         $data = '-';
