@@ -1,3 +1,5 @@
+@props(['value' => 0, 'max' => 100, 'type' => 'kontainer'])
+
 @if (strtolower($type) == 'kontainer')
 
     {{-- <progress class="progress-{{ $color }} progress-kontainer" value="{{ $value }}" max="{{ $max }}"></progress> --}}
