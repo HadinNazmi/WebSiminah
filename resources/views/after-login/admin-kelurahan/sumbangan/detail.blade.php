@@ -22,7 +22,7 @@
                     </div>
                     <div class="col-xxl-5 col-xl-5 col-lg-5 col-md-5 col-sm-12 col-12">
                         <div class="right-header ms-3 ms-xxl-0 ms-xl-0 ms-lg-0 ms-md-0">
-                            <x-forms.inputDate id="date-range-picker" />
+                            <x-forms.input-date id="date-range-picker" />
                             <div class="header-button">
                                 <div
                                     class="text-poppins text-14 btn-reward-position d-flex justify-content-end align-items-end">
