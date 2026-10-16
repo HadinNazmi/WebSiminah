@@ -1,0 +1,47 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Environment & credentials
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Composer & Node dependencies
+vendor
+node_modules
+
+# Storage logs & temporary files (directories will be created in Dockerfile)
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/views/.gitignore
+!storage/logs/.gitignore
+
+# Testing & caches
+tests
+phpunit.xml
+.phpunit.cache
+.phpunit.result.cache
+
+# IDE & Editor settings
+.idea
+.vscode
+.fleet
+.editorconfig
+
+# Local logs & dumps
+npm-debug.log
+yarn-error.log
+.rnd
+*.sql
+backup-*.sql
+
+# Documentation & notes
+*.md
+catatan*.md

@@ -19,4 +19,5 @@ yarn-error.log
 /.vscode
 .env.*
 !.env.example
+!.env.production.example
 backup-*.sql
